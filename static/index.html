@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorldMonitor AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body x-data="worldMonitor()" x-init="init()">
+
+<!-- Top bar -->
+<div id="topbar">
+  <span class="logo">WorldMonitor AI</span>
+  <div class="topbar-actions">
+    <button class="btn" :class="{ active: mapMode === '2d' }" @click="setMapMode('2d')">2D</button>
+    <button class="btn" :class="{ active: mapMode === '3d' }" @click="setMapMode('3d')">3D</button>
+    <span class="btn" x-text="'Events: ' + eventCount" style="cursor:default;"></span>
+  </div>
+</div>
+
+<!-- Ollama banner (shown when no models detected) -->
+<div id="ollama-banner" x-show="ollamaDown" x-cloak>
+  Ollama not detected. Start with <code>ollama serve</code> and pull a model:
+  <code>ollama pull qwen2.5:7b</code>
+</div>
+
+<!-- Main layout -->
+<div id="layout">
+
+  <!-- Sidebar / Filters -->
+  <div id="sidebar" class="glass">
+    <div class="filter-section">
+      <h3>Categories</h3>
+      <template x-for="cat in categories" :key="cat.id">
+        <label class="filter-row">
+          <input type="checkbox" :value="cat.id" x-model="selectedCategories" @change="applyFilters()" />
+          <span class="cat-dot" :style="'background:' + cat.color"></span>
+          <span x-text="cat.label"></span>
+        </label>
+      </template>
+    </div>
+
+    <div class="filter-section">
+      <h3>Min Severity</h3>
+      <input type="range" min="0" max="10" step="1" x-model.number="minSeverity" @input="applyFilters()" />
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px" x-text="'Threshold: ' + minSeverity"></div>
+    </div>
+
+    <div class="filter-section">
+      <h3>Date From</h3>
+      <input type="date" x-model="dateFrom" @change="applyFilters()" />
+    </div>
+
+    <div class="filter-section">
+      <h3>Date To</h3>
+      <input type="date" x-model="dateTo" @change="applyFilters()" />
+    </div>
+
+    <div class="filter-section">
+      <h3>Country</h3>
+      <select x-model="selectedCountry" @change="applyFilters()">
+        <option value="">All countries</option>
+        <template x-for="c in countries" :key="c">
+          <option :value="c" x-text="c"></option>
+        </template>
+      </select>
+    </div>
+  </div>
+
+  <!-- Map canvas -->
+  <div id="map-panel" class="glass">
+    <iframe id="map-frame" :src="mapSrc" title="Event map"></iframe>
+  </div>
+
+  <!-- Chat panel -->
+  <div id="chat-panel" class="glass">
+    <h3>AI Analyst</h3>
+
+    <select id="model-select" class="glass" x-model="selectedModel">
+      <template x-for="m in models" :key="m">
+        <option :value="m" x-text="m"></option>
+      </template>
+      <option value="" x-show="models.length === 0">No models available</option>
+    </select>
+
+    <div id="chat-messages" x-ref="chatMessages">
+      <template x-for="(msg, i) in chatHistory" :key="i">
+        <div class="msg" :class="msg.role" x-html="msg.content"></div>
+      </template>
+      <div class="msg assistant streaming" x-show="streaming" x-text="streamingText"></div>
+    </div>
+
+    <div id="chat-input-row">
+      <textarea id="chat-input" placeholder="Ask about world events..." x-model="chatInput"
+        @keydown.enter.prevent="sendChat()" :disabled="streaming"></textarea>
+      <button id="send-btn" @click="sendChat()" :disabled="streaming">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Event feed -->
+<div id="feed-section">
+  <div id="feed-header">
+    <div class="live-dot"></div>
+    <h3>Live Event Feed</h3>
+  </div>
+  <div id="event-cards">
+    <template x-for="ev in events" :key="ev.id">
+      <a class="event-card glass new-event-flash" :href="ev.link" target="_blank" rel="noopener">
+        <div class="card-title" x-text="ev.title"></div>
+        <div class="card-meta">
+          <span x-text="ev.source_name"></span>
+          &nbsp;&bull;&nbsp;
+          <span x-text="(ev.country || '—')"></span>
+          &nbsp;&bull;&nbsp;
+          <span x-text="formatDate(ev.published_at)"></span>
+        </div>
+        <div class="sev-bar" :style="severityBarStyle(ev.severity)"></div>
+      </a>
+    </template>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
