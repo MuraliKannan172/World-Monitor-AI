@@ -1,86 +1,193 @@
-# WorldMonitor AI
+# 🌍 WorldMonitor AI
 
-A production-grade, 100% local, open-source OSINT dashboard with integrated Ollama-powered RAG chatbot and glassmorphic UI.
+**Real-time Global Intelligence Dashboard powered by AI, Geospatial Analytics, and Interactive 3D Visualization**
 
-**Zero external API keys. Runs fully offline after initial setup.**
+WorldMonitor AI is an advanced situational awareness platform designed to monitor global events in real time. It combines live data feeds, AI-assisted analysis, geospatial layers, and an immersive 2D/3D globe interface to help users explore crises, military activity, infrastructure risks, health alerts, and world developments from a single dashboard.
 
-## Features
+---
 
-- 55+ curated RSS feeds (world, geopolitics, conflict, cyber, energy, finance, regional)
-- Automatic geo-extraction via spaCy NER + offline GeoNames gazetteer
-- Interactive 2D Folium map (marker clusters + heatmap) with live WebSocket updates
-- 3D pydeck globe visualization
-- AI chatbot: BM25 RAG over SQLite FTS5 + local Ollama LLM (streaming)
-- Runtime model switching (switch Ollama models mid-conversation)
-- Filters: category, country, severity, date range
-- Severity scoring (1-10) via background Ollama calls
+## 🚀 Key Features
 
-## Quick Start (Windows)
+### 🌐 Interactive Global Visualization
 
-```powershell
-git clone <repo>
+* Switch between **2D Map** and **3D Globe**
+* Smooth globe rotation and immersive world view
+* Dynamic markers for live global events
+* Layer-based intelligence overlays
+
+### 🧠 AI Analyst Panel
+
+* Integrated local AI models (Ollama supported)
+* Ask intelligence questions from current event data
+* Generate summaries, briefings, and trend analysis
+* Custom prompt-driven insights
+
+### 🛰️ Multi-Layer Monitoring System
+
+#### Crisis Intelligence
+
+* Iran Attacks
+* Intel Hotspots
+* Conflict Zones
+* Protests
+* Armed Conflict Events
+* Displacement Flows
+* Disease Outbreaks
+
+#### Military Intelligence
+
+* Military Bases
+* Nuclear Sites
+* Gamma Irradiators
+* Radiation Watch
+* Military Activity
+
+#### Infrastructure Monitoring
+
+* Undersea Cables
+* Pipelines
+* AI Data Centers
+* Spaceports
+* Trade Routes
+* Chokepoints
+
+#### Environment & Global Risk
+
+* Weather / Climate Signals
+* Natural Hazards
+* Resource Pressure Zones
+* Emerging Global Threats
+
+### 📰 Live News Feed
+
+* Real-time event cards
+* Global headlines
+* Region-specific developments
+* Continuous intelligence updates
+
+### 🕒 World Clock Integration
+
+* Multi-region awareness
+* Global operations readiness
+
+---
+
+## 🛠️ Technology Stack
+
+* **Backend:** Python, FastAPI
+* **Frontend:** HTML, CSS, JavaScript
+* **Visualization:** Globe / Map Rendering
+* **Database:** SQLite / Local Storage
+* **AI Integration:** Ollama (Gemma, Qwen, Llama, etc.)
+* **Geospatial Processing:** Custom Geo Layers
+* **RAG Support:** Retrieval-Augmented Intelligence Modules
+
+---
+
+## 📂 Project Structure
+
+```text
+worldmonitor-ai/
+├── app/               # Core backend modules
+├── static/            # Frontend assets
+├── data/              # Datasets / feeds
+├── docs/              # Documentation
+├── tests/             # Test modules
+├── scripts/           # Utility scripts
+├── README.md
+├── requirements.txt
+└── pyproject.toml
+```
+
+---
+
+## ⚡ Installation
+
+```bash
+git clone https://github.com/YOUR_USERNAME/worldmonitor-ai.git
 cd worldmonitor-ai
-.\scripts\bootstrap.ps1
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
 
-# In a separate terminal:
-ollama serve
+Open in browser:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## 🤖 AI Model Setup (Optional)
+
+Install Ollama and pull a model:
+
+```bash
+ollama pull gemma:4b
+```
+
+or
+
+```bash
 ollama pull qwen2.5:7b
-
-python -m app.main
 ```
 
-Open [http://localhost:8000](http://localhost:8000)
+Then connect through the AI Analyst panel.
 
-## Quick Start (Linux / macOS)
+---
+
+## 🎯 Use Cases
+
+* Security & Intelligence Monitoring
+* Geopolitical Research
+* Crisis Response Dashboards
+* OSINT Operations
+* Defence Awareness Systems
+* Newsroom Intelligence
+* Academic Global Studies
+* Strategic Risk Analysis
+
+---
+
+## 🔮 Future Roadmap
+
+* Satellite Feed Integration
+* Predictive Threat Analytics
+* User Authentication
+* Alert Notifications
+* Historical Replay Mode
+* Mobile Responsive Version
+* Team Collaboration Tools
+* Export Reports / PDF Briefings
+
+---
+
+## 🤝 Contributing
+
+Contributions, ideas, and improvements are welcome.
 
 ```bash
-git clone <repo>
-cd worldmonitor-ai
-chmod +x scripts/bootstrap.sh && ./scripts/bootstrap.sh
-ollama serve && ollama pull qwen2.5:7b
-python -m app.main
+fork → clone → improve → pull request
 ```
 
-## Requirements
+---
 
-- Python 3.11+
-- [Ollama](https://ollama.ai) installed locally (for chatbot; app works without it)
-- 4GB+ RAM, 8GB+ GPU VRAM recommended
+## 📜 License
 
-## Architecture
+Choose your preferred license:
 
-See `docs/ADR.md` for all architecture decisions.
+* MIT License
+* Apache 2.0
+* Private Internal Use
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | FastAPI + Uvicorn + asyncio |
-| Database | SQLite (WAL, FTS5 BM25) |
-| NLP | spaCy en_core_web_sm |
-| Geo | GeoNames cities1000 gazetteer + rapidfuzz |
-| AI | Ollama (any local model) |
-| Maps | Folium (2D) + pydeck (3D) |
-| Frontend | Vanilla JS + Alpine.js + Tailwind CDN |
+---
 
-## Configuration
+## 👤 Author
+Murali Kannan
+AI Consultant | Builder of Practical AI Systems
 
-Copy `.env.example` to `.env` and adjust:
+---
 
-```env
-OLLAMA_DEFAULT_MODEL=qwen2.5:7b
-FEED_INTERVAL_MINUTES=7
-```
+## ⭐ Support
 
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| Chatbot unavailable | Run `ollama serve` and `ollama pull qwen2.5:7b` |
-| No events on map | Wait 60s for first ingest cycle; check `LOG_LEVEL=DEBUG` |
-| Gazetteer download fails | Download `cities1000.zip` from geonames.org and extract to `data/` |
-| Port in use | Set `PORT=8001` in `.env` |
-
-## Running Tests
-
-```bash
-pytest tests/ -v
-```
+If you like this project, give it a **star** on GitHub and share it with others.
