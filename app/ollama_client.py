@@ -42,18 +42,24 @@ class OllamaClient:
         """Yield token strings from Ollama streaming chat."""
         m = model or settings.ollama_default_model
         try:
-            async for chunk in await self._client.chat(
+            stream = await self._client.chat(
                 model=m,
                 messages=messages,
                 stream=True,
-                options={"num_ctx": settings.ollama_num_ctx},
-            ):
+                options={
+                    "num_ctx": settings.ollama_num_ctx,
+                    "num_predict": 1024,
+                    "temperature": 0.7,
+                },
+                keep_alive="10m",
+            )
+            async for chunk in stream:
                 token = chunk.message.content
                 if token:
                     yield token
         except Exception as exc:
             logger.warning("Ollama stream error: {}", exc)
-            yield "[Error: Ollama unavailable]"
+            yield f"[Error: {exc}]"
 
 
 # Singleton — instantiated at app startup

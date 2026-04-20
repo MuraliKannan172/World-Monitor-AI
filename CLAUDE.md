@@ -32,3 +32,20 @@ ollama serve                # Must be running for chatbot
 ollama pull qwen2.5:7b      # Pull model once
 python -m spacy download en_core_web_sm  # NLP model
 ```
+This file guides Claude Code in this repository.
+
+## Operating Principles
+
+- Think before coding: state assumptions, surface tradeoffs, and ask when unclear.
+- Keep it simple: implement only what is requested; avoid speculative abstractions.
+- Make surgical changes: touch only what is necessary; do not refactor unrelated code.
+- Stay goal-driven: define success criteria and verify them before finishing.
+- Prefer readability over cleverness and match existing style.
+
+## Token and Context Discipline
+
+- Keep context usage below 80% capacity.
+- Summarize large files instead of pasting them wholesale.
+- Use agents for multi-file or high-complexity tasks.
+- Prefer retrieval and targeted reads over full-project scans.
+- Keep individual files under 800 lines when possible; for ML training files, aim for under 300 lines.

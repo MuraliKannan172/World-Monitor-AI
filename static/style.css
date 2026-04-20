@@ -38,6 +38,8 @@ html, body {
   font-size: 14px;
   line-height: 1.5;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Glass panel ────────────────────────────────────────────────────── */
@@ -97,7 +99,8 @@ html, body {
   display: grid;
   grid-template-columns: 220px 1fr 300px;
   grid-template-rows: 1fr;
-  height: calc(100vh - 52px - 180px);
+  flex: 1;
+  min-height: 0;
   gap: 8px;
   padding: 8px;
 }
@@ -179,6 +182,8 @@ select option { background: var(--bg-surface); }
   flex-direction: column;
   padding: 14px;
   gap: 10px;
+  overflow: hidden;    /* keeps panel inside grid cell */
+  min-height: 0;
 }
 
 #chat-panel h3 {
@@ -195,11 +200,14 @@ select option { background: var(--bg-surface); }
 
 #chat-messages {
   flex: 1;
+  min-height: 0;       /* prevents flexbox from expanding container */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
 }
 
 .msg {
@@ -242,7 +250,10 @@ select option { background: var(--bg-surface); }
   font-size: 13px;
   font-family: var(--font-ui);
   resize: none;
+  min-height: 38px;
+  max-height: 120px;
   height: 38px;
+  overflow-y: auto;
 }
 #chat-input:focus { outline: none; border-color: var(--accent-cyan); }
 
@@ -273,6 +284,7 @@ select option { background: var(--bg-surface); }
 /* ── Event feed ───────────────────────────────────────────────────────── */
 #feed-section {
   height: 180px;
+  min-height: 180px;
   padding: 8px;
   flex-shrink: 0;
 }
@@ -375,6 +387,263 @@ select option { background: var(--bg-surface); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
 
+/* ── World Clock Panel ────────────────────────────────────────────────── */
+#clock-panel {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  left: 0;
+  z-index: 400;
+  padding: 14px 20px;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  background: rgba(10, 14, 26, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-top: none;
+}
+
+.clock-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.clock-card {
+  flex-shrink: 0;
+  width: 130px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: center;
+  background: rgba(255,255,255,0.04);
+}
+
+.clock-city {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--accent-cyan);
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.clock-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.clock-tz {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.clock-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.clock-tz-select {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--font-ui);
+}
+
+/* ── Chat header ──────────────────────────────────────────────────────── */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-sm {
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+/* ── Markdown in chat ─────────────────────────────────────────────────── */
+.msg code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.citation {
+  display: inline-block;
+  background: rgba(0,212,255,0.15);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent-cyan);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border-radius: 4px;
+  padding: 0 4px;
+  vertical-align: super;
+  line-height: 1;
+}
+
+/* ── Layer panel (replaces filter sidebar) ────────────────────────────── */
+.layer-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.layer-count-badge {
+  background: rgba(0,212,255,0.15);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent-cyan);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.layer-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.layer-group-section { display: flex; flex-direction: column; gap: 3px; }
+
+.layer-group-title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+  padding-left: 2px;
+}
+
+.layer-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+}
+.layer-toggle-btn:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+.layer-toggle-btn.active {
+  background: rgba(0,212,255,0.1);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.layer-toggle-btn span:first-child { font-size: 14px; flex-shrink: 0; }
+
+/* ── Typing indicator ─────────────────────────────────────────────────── */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.typing-indicator span {
+  width: 7px;
+  height: 7px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  animation: typing-bounce 1.4s infinite;
+  opacity: 0.5;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Chat hint ────────────────────────────────────────────────────────── */
+.chat-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Quick questions ──────────────────────────────────────────────────── */
+#quick-questions {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+#quick-questions::-webkit-scrollbar { display: none; }
+
+.quick-q {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--font-ui);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), color var(--dur-fast), background var(--dur-fast);
+  white-space: nowrap;
+}
+.quick-q:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0,212,255,0.07);
+}
+.quick-q:disabled { opacity: 0.35; cursor: not-allowed; }
+
 /* ── Mobile ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   #layout {
@@ -384,4 +653,5 @@ select option { background: var(--bg-surface); }
   }
   #sidebar, #chat-panel { display: none; }
   #feed-section { height: 120px; }
+  #clock-panel { position: relative; top: auto; }
 }

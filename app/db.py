@@ -157,8 +157,17 @@ async def fetch_events(
     return [dict(r) for r in rows]
 
 
+def _sanitize_fts(query: str) -> str:
+    """Strip FTS5 special chars so user questions don't crash the query."""
+    import re
+    clean = re.sub(r'[^\w\s]', ' ', query)
+    tokens = clean.split()
+    return " ".join(tokens) if tokens else '""'
+
+
 async def fts_search(query: str, limit: int = 8) -> list[dict]:
     """BM25 full-text search over articles for RAG context."""
+    safe_query = _sanitize_fts(query)
     sql = """
         SELECT a.id, a.title, a.summary, a.link, a.source_name, a.published_at, a.country
         FROM articles_fts f
@@ -168,7 +177,7 @@ async def fts_search(query: str, limit: int = 8) -> list[dict]:
         LIMIT ?
     """
     async with get_db() as db:
-        cursor = await db.execute(sql, (query, limit))
+        cursor = await db.execute(sql, (safe_query, limit))
         rows = await cursor.fetchall()
     return [dict(r) for r in rows]
 
@@ -180,3 +189,38 @@ async def save_chat_turn(session_id: str, role: str, content: str) -> None:
             (session_id, role, content),
         )
         await db.commit()
+
+
+async def get_chat_history(session_id: str, limit: int = 20) -> list[dict]:
+    """Fetch prior conversation turns for a session (oldest first)."""
+    sql = """
+        SELECT role, content FROM chat_sessions
+        WHERE session_id = ?
+        ORDER BY created_at ASC
+        LIMIT ?
+    """
+    async with get_db() as db:
+        cursor = await db.execute(sql, (session_id, limit))
+        rows = await cursor.fetchall()
+    return [dict(r) for r in rows]
+
+
+async def get_event_stats() -> dict:
+    """Return summary stats for RAG context enrichment."""
+    async with get_db() as db:
+        total_row = await (await db.execute("SELECT COUNT(*) FROM articles")).fetchone()
+        high_sev_row = await (await db.execute(
+            "SELECT COUNT(*) FROM articles WHERE severity >= 7"
+        )).fetchone()
+        recent_rows = await (await db.execute("""
+            SELECT category, COUNT(*) as cnt
+            FROM articles
+            WHERE published_at >= datetime('now', '-24 hours')
+            GROUP BY category
+            ORDER BY cnt DESC
+        """)).fetchall()
+    return {
+        "total_events": total_row[0] if total_row else 0,
+        "high_severity_count": high_sev_row[0] if high_sev_row else 0,
+        "recent_by_category": [dict(r) for r in recent_rows],
+    }

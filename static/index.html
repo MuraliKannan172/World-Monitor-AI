@@ -16,13 +16,37 @@
 <div id="topbar">
   <span class="logo">WorldMonitor AI</span>
   <div class="topbar-actions">
-    <button class="btn" :class="{ active: mapMode === '2d' }" @click="setMapMode('2d')">2D</button>
-    <button class="btn" :class="{ active: mapMode === '3d' }" @click="setMapMode('3d')">3D</button>
+    <button class="btn" :class="{ active: mapMode === '2d' }" @click="setMapMode('2d')">2D Map</button>
+    <button class="btn" :class="{ active: mapMode === '3d' }" @click="setMapMode('3d')">3D Globe</button>
     <span class="btn" x-text="'Events: ' + eventCount" style="cursor:default;"></span>
+    <button class="btn" :class="{ active: clockOpen }" @click="clockOpen = !clockOpen">&#x1F310; World Clock</button>
   </div>
 </div>
 
-<!-- Ollama banner (shown when no models detected) -->
+<!-- World Clock Panel (dropdown below topbar) -->
+<div id="clock-panel" class="glass" x-show="clockOpen" x-cloak>
+  <div class="clock-grid">
+    <template x-for="zone in clockZones" :key="zone.tz">
+      <div class="clock-card glass">
+        <div class="clock-city" x-text="zone.label"></div>
+        <div class="clock-time" x-text="zone.time"></div>
+        <div class="clock-date" x-text="zone.date"></div>
+        <div class="clock-tz" x-text="zone.tz"></div>
+      </div>
+    </template>
+  </div>
+  <div class="clock-add-row">
+    <select x-model="customTz" class="clock-tz-select">
+      <option value="">Add timezone…</option>
+      <template x-for="tz in availableTimezones" :key="tz.tz">
+        <option :value="tz.tz" x-text="tz.label"></option>
+      </template>
+    </select>
+    <button class="btn" @click="addClockZone()" :disabled="!customTz">Add</button>
+  </div>
+</div>
+
+<!-- Ollama banner -->
 <div id="ollama-banner" x-show="ollamaDown" x-cloak>
   Ollama not detected. Start with <code>ollama serve</code> and pull a model:
   <code>ollama pull qwen2.5:7b</code>
@@ -31,43 +55,26 @@
 <!-- Main layout -->
 <div id="layout">
 
-  <!-- Sidebar / Filters -->
+  <!-- Sidebar / Layer Panel -->
   <div id="sidebar" class="glass">
-    <div class="filter-section">
-      <h3>Categories</h3>
-      <template x-for="cat in categories" :key="cat.id">
-        <label class="filter-row">
-          <input type="checkbox" :value="cat.id" x-model="selectedCategories" @change="applyFilters()" />
-          <span class="cat-dot" :style="'background:' + cat.color"></span>
-          <span x-text="cat.label"></span>
-        </label>
+    <div class="layer-panel-head">
+      <span>Map Layers</span>
+      <span class="layer-count-badge" x-text="activeLayerCount + ' on'"></span>
+    </div>
+    <div class="layer-scroll">
+      <template x-for="group in layerGroups" :key="group">
+        <div class="layer-group-section">
+          <div class="layer-group-title" x-text="group"></div>
+          <template x-for="layer in layersByGroup(group)" :key="layer.id">
+            <button class="layer-toggle-btn"
+              :class="{active: activeLayers[layer.id]}"
+              @click="toggleLayer(layer.id)">
+              <span x-text="layer.icon"></span>
+              <span x-text="layer.label"></span>
+            </button>
+          </template>
+        </div>
       </template>
-    </div>
-
-    <div class="filter-section">
-      <h3>Min Severity</h3>
-      <input type="range" min="0" max="10" step="1" x-model.number="minSeverity" @input="applyFilters()" />
-      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px" x-text="'Threshold: ' + minSeverity"></div>
-    </div>
-
-    <div class="filter-section">
-      <h3>Date From</h3>
-      <input type="date" x-model="dateFrom" @change="applyFilters()" />
-    </div>
-
-    <div class="filter-section">
-      <h3>Date To</h3>
-      <input type="date" x-model="dateTo" @change="applyFilters()" />
-    </div>
-
-    <div class="filter-section">
-      <h3>Country</h3>
-      <select x-model="selectedCountry" @change="applyFilters()">
-        <option value="">All countries</option>
-        <template x-for="c in countries" :key="c">
-          <option :value="c" x-text="c"></option>
-        </template>
-      </select>
     </div>
   </div>
 
@@ -78,7 +85,10 @@
 
   <!-- Chat panel -->
   <div id="chat-panel" class="glass">
-    <h3>AI Analyst</h3>
+    <div class="chat-header">
+      <h3>AI Analyst</h3>
+      <button class="btn btn-sm" @click="clearChat()" title="New session">&#x21BA; Clear</button>
+    </div>
 
     <select id="model-select" class="glass" x-model="selectedModel">
       <template x-for="m in models" :key="m">
@@ -91,14 +101,26 @@
       <template x-for="(msg, i) in chatHistory" :key="i">
         <div class="msg" :class="msg.role" x-html="msg.content"></div>
       </template>
-      <div class="msg assistant streaming" x-show="streaming" x-text="streamingText"></div>
+      <div class="typing-indicator msg assistant" x-show="streaming && !streamingText">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="msg assistant streaming" x-show="streaming && streamingText" x-text="streamingText"></div>
+    </div>
+
+    <div id="quick-questions">
+      <template x-for="q in quickQuestions" :key="q.label">
+        <button class="quick-q" :disabled="streaming" @click="askQuick(q.prompt)" x-text="q.label"></button>
+      </template>
     </div>
 
     <div id="chat-input-row">
-      <textarea id="chat-input" placeholder="Ask about world events..." x-model="chatInput"
-        @keydown.enter.prevent="sendChat()" :disabled="streaming"></textarea>
-      <button id="send-btn" @click="sendChat()" :disabled="streaming">Send</button>
+      <textarea id="chat-input" placeholder="Ask about world events…" x-model="chatInput"
+        @keydown="handleKeydown($event)"
+        @input="autoGrowTextarea($event)"
+        :disabled="streaming"></textarea>
+      <button id="send-btn" @click="sendChat()" :disabled="streaming || !chatWsReady">Send</button>
     </div>
+    <div class="chat-hint">↵ Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
   </div>
 
 </div>

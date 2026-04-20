@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from app import db, geo, scheduler, severity
+from app import db, geo, layers, scheduler, severity
 from app.config import settings
 from app.map_handler import render_2d, render_3d
 from app.ollama_client import ollama
@@ -118,6 +118,18 @@ async def get_models():
     return {"models": models, "default": settings.ollama_default_model}
 
 
+@app.get("/api/layers")
+async def get_layers():
+    return layers.LAYER_DEFS
+
+
+@app.get("/api/layers/{layer_id}")
+async def get_layer_data(layer_id: str):
+    from fastapi.responses import JSONResponse
+    data = await layers.fetch_layer(layer_id)
+    return JSONResponse(content=data)
+
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
@@ -138,12 +150,15 @@ async def websocket_endpoint(ws: WebSocket):
 @app.websocket("/ws/chat")
 async def chat_endpoint(ws: WebSocket):
     await ws.accept()
-    session_id = str(uuid.uuid4())
     try:
         while True:
             payload = await ws.receive_json()
+            if payload.get("type") == "ping":
+                continue
             question = payload.get("question", "").strip()
             model = payload.get("model") or None
+            # Client provides session_id so history persists across messages
+            session_id = payload.get("session_id") or str(uuid.uuid4())
             if not question:
                 continue
             async for token in answer_stream(question, model, session_id):

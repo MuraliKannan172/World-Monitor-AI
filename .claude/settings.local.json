@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api *)",
+      "Bash(python -c \"import json,sys; [print\\(f['name']\\) for f in json.load\\(sys.stdin\\)]\")",
+      "Bash(.venv/Scripts/python.exe -c \"import ollama; c = ollama.Client\\(\\); print\\(c.list\\(\\)\\)\")",
+      "WebFetch(domain:github.com)",
+      "Bash(cat requirements.txt)",
+      "Bash(ls *.txt)",
+      "Bash(.venv/Scripts/pip.exe list *)",
+      "Bash(curl -s http://localhost:11434/api/tags)",
+      "Bash(.venv/Scripts/python.exe -c \"from app.main import app; print\\('App imports OK'\\)\")",
+      "Bash(pip install *)",
+      "Bash(conda run *)",
+      "Bash(C:\\\\Users\\\\Murali Kannan\\\\.conda\\\\envs\\\\worldai\\\\python.exe *)"
+    ]
+  }
+}
