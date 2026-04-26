@@ -104,8 +104,8 @@ worldmonitor-ai/
 ## ⚡ Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/worldmonitor-ai.git
-cd worldmonitor-ai
+git clone https://github.com/MuraliKannan172/World-Monitor-AI.git
+cd World-Monitor-AI
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
