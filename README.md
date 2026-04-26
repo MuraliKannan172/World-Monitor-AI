@@ -107,6 +107,7 @@ worldmonitor-ai/
 git clone https://github.com/MuraliKannan172/World-Monitor-AI.git
 cd World-Monitor-AI
 pip install -r requirements.txt
+python-m spacy download en_core_web_sm
 python -m uvicorn app.main:app --reload
 ```
 
